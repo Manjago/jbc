@@ -11,7 +11,7 @@ for v in 8 11 17 21 25; do
   rm -rf "$out"; mkdir -p "$out"
   if "$home/bin/javac" -g -d "$out" "$src" 2> "$out/javac.err"; then
     for c in "$out"/*.class; do
-      "$JAVAP" -v -p -c "$c" > "${c%.class}.javap.txt"
+      "$JAVAP" -v -p -c "$c" | tail -n +3 > "${c%.class}.javap.txt"
     done
     echo "jdk$v: ok"
   else

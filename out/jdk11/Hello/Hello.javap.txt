@@ -1,5 +1,3 @@
-Classfile /home/kirill/IdeaProjects/jbc/out/jdk11/Hello/Hello.class
-  Last modified 19 сент. 2026 г.; size 519 bytes
   SHA-256 checksum 57503476e262f4459ac32dd037ccf096a92618a2f08d35aff6bb9429482ea769
   Compiled from "Hello.java"
 public class Hello
