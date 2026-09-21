@@ -1,5 +1,7 @@
 ## Задание 1: smoke-тест,  генератор из ASMifier → `Lab.run` → «Hello World!».
 
+*Допиши `Lab` и сделай smoke-тест: генератор из ASMifier → `Lab.run` → «Hello World!».*
+
 Работаем с [исходником](../../samples/Hello.java)
 
 ```bash
