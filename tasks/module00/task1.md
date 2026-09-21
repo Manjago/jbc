@@ -8,7 +8,7 @@ cd ..
 cd ..
 source jdks.env
 ./multi-javac.sh samples/Hello.java
-# получили Hello.class для ASMifier
+# получили Hello.class для ASMifier, скомпилировав Hello.java
 mvn -q compile dependency:build-classpath -Dmdep.outputFile=cp.txt
 # запаслись зависимостями для classpath
 java -cp "$(cat cp.txt)" org.objectweb.asm.util.ASMifier out/jdk25/Hello/Hello.class > tasks/HelloDump.java
@@ -16,7 +16,7 @@ java -cp "$(cat cp.txt)" org.objectweb.asm.util.ASMifier out/jdk25/Hello/Hello.c
 javac -cp "target/classes:$(cat cp.txt)" -d target/classes tasks/HelloDump.java
 # скомпилировали исходник от ASMifier
 java -cp "target/classes:$(cat cp.txt)" tasks/Smoke.java HelloDump
-# через helper tasks/Smoke.java дернули dump и запустили класс прямо в памяти
+# через helper tasks/Smoke.java дернули dump у скомпилированного исходника и запустили класс прямо в памяти
 rm -f tasks/HelloDump.java
 # почистили за собой
 ```
