@@ -17,8 +17,9 @@ private static String jdkFromMajor(int major) {
     };
 }
 
-void main() throws Exception {
-    IO.println("Текущая JVM: " + System.getProperty("java.version") + " (поддерживает байткод до ASM API versions " + Opcodes.ASM9 +")");
+@SuppressWarnings({"java:S1181", "java:S1192"})
+private static void helloCheckUp() throws IOException {
+    IO.println("Текущая JVM: " + System.getProperty("java.version") + " (поддерживает байткод до ASM API versions " + Opcodes.ASM9 + ")");
     IO.println("=".repeat(80));
 
     for (String version : VERSIONS) {
@@ -36,6 +37,7 @@ void main() throws Exception {
         // 1. Читаем версию байткода
         final ClassReader reader = new ClassReader(bytes);
         // Честный способ достать major version:
+        // байты 6 и 7 это major version в big-endian. Магия: 0xCAFEBABE (байты 0–3), minor (4–5), major (6–7).
         final int major = reader.readByte(6) << 8 | reader.readByte(7);
         IO.println("  major=" + major + " (" + jdkFromMajor(major) + ")");
 
@@ -43,8 +45,8 @@ void main() throws Exception {
         IO.println("  verify: " + (Lab.verify(bytes) ? "OK" : "FAIL (см. stderr)"));
 
         // 3. textify — первые строки, чтобы не захламлять вывод
-        String text = Lab.textify(bytes);
-        String firstLines = text.lines().limit(8).reduce((a, b) -> a + "\n    " + b).orElse("");
+        final String text = Lab.textify(bytes);
+        final String firstLines = text.lines().limit(8).reduce((a, b) -> a + "\n    " + b).orElse("");
         IO.println("  textify (первые 8 строк):\n    " + firstLines);
 
         // 4. define + run
@@ -52,7 +54,7 @@ void main() throws Exception {
         try {
             Class<?> clazz = Lab.define(bytes);
             IO.println("  define: OK -> " + clazz);
-            boolean ok = Lab.run(bytes, "foo", "bar");
+            final boolean ok = Lab.run(bytes, "foo", "bar");
             IO.println("  run: " + (ok ? "OK" : "FAIL"));
         } catch (Throwable t) {
             IO.println("  define/run: " + t.getClass().getSimpleName() + ": " + t.getMessage());
@@ -62,11 +64,15 @@ void main() throws Exception {
     }
 
     // 5. dump + настоящий javap для одного из файлов
-    Path jdk25 = Path.of("out", "jdk25", "Hello", "Hello.class");
+    final Path jdk25 = Path.of("out", "jdk25", "Hello", "Hello.class");
     if (Files.exists(jdk25)) {
-        byte[] bytes = Files.readAllBytes(jdk25);
-        Path dumped = Path.of("out", "playground", "Hello.class");
+        final byte[] bytes = Files.readAllBytes(jdk25);
+        final Path dumped = Path.of("out", "playground", "Hello.class");
         Lab.dump(bytes, dumped);
         IO.println("Сдамплено в " + dumped.toAbsolutePath() + " — можно натравить: javap -v " + dumped.toAbsolutePath());
     }
+}
+
+void main() throws Exception {
+    helloCheckUp(); // проверим, что там с Hello, и через jdk25 сдампим
 }

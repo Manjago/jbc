@@ -19,16 +19,21 @@ public final class Lab {
     }
 
     /// Прогоняет байты через `CheckClassAdapter.verify(...)` и выводит результат в stderr
+    /// printResult: false - осознанный выбор
+    /// хотя всё равно выполняет анализ потока данных, просто при ошибке печатает только
+    /// сообщение об ошибке, без дампа всего класса
     ///
     /// @param bytes массив байт
     /// @return true, если ошибок нет
+    @SuppressWarnings("java:S106")
     public static boolean verify(byte[] bytes) {
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter, true);
 
         CheckClassAdapter.verify(new ClassReader(bytes), false, printWriter);
 
-        String output = stringWriter.toString();
+        // verify исключения не бросит, только ошибки - ну давайте это обработаем
+        final String output = stringWriter.toString();
         if (!output.isEmpty()) {
             System.err.print(output);
             return false;
@@ -45,7 +50,7 @@ public final class Lab {
             if (path.getParent() != null) {
                 Files.createDirectories(path.getParent());
             }
-            Files.write(path, bytes);
+            Files.write(path, bytes); // CREATE, TRUNCATE_EXISTING, WRITE - то что нужно
         } catch (IOException e) {
             throw new UncheckedIOException("Не удалось записать класс в " + path, e);
         }
@@ -57,7 +62,7 @@ public final class Lab {
         final PrintWriter printWriter = new PrintWriter(stringWriter);
         new ClassReader(bytes).accept(new TraceClassVisitor(null, new Textifier(), printWriter), 0);
 
-        printWriter.flush();
+        printWriter.flush(); // для StringWriter некритичен, но так правильно
         return stringWriter.toString();
     }
 
@@ -82,6 +87,8 @@ public final class Lab {
         final Class<?> clazz = define(rawArray);
         try {
             final Method main = clazz.getDeclaredMethod("main", String[].class);
+            // cast к Object заставляет передать массив аргументов как отдельный аргумент
+            // потому что `invoke(Object obj, Object... args)` - это varargs
             main.invoke(null, (Object) args);
             return true;
         } catch (NoSuchMethodException e) {
@@ -89,6 +96,7 @@ public final class Lab {
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Нет доступа к main в " + clazz.getName(), e);
         } catch (InvocationTargetException e) {
+            // исключение приходит завернутым
             final Throwable cause = e.getCause();
             throw new IllegalStateException(
                     "main выбросил исключение: " + cause, cause);
@@ -100,6 +108,7 @@ public final class Lab {
             super(Lab.class.getClassLoader());
         }
 
+        // define(null...) - имя класса берется из байт0кода
         Class<?> define(byte[] bytes) {
             return defineClass(null, bytes, 0, bytes.length);
         }
